@@ -1,0 +1,196 @@
+{
+  "info": {
+    "_postman_id": "school-mgmt-api-v1",
+    "name": "School Management API",
+    "description": "Complete Postman collection for the School Management API.\n\nEndpoints:\n- POST /addSchool — Add a new school\n- GET  /listSchools — List schools sorted by proximity\n\nBase URL: Set the {{baseUrl}} variable to your server, e.g. http://localhost:3000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Verify the server is running."
+      },
+      "response": [
+        {
+          "name": "Server Running",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"status\": \"ok\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Add School",
+      "item": [
+        {
+          "name": "Add School — Success",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Springfield High School\",\n  \"address\": \"742 Evergreen Terrace, Springfield, IL 62701\",\n  \"latitude\": 39.7817,\n  \"longitude\": -89.6501\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["addSchool"]
+            },
+            "description": "Adds a new school to the database. All four fields are required."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"School added successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Springfield High School\",\n    \"address\": \"742 Evergreen Terrace, Springfield, IL 62701\",\n    \"latitude\": 39.7817,\n    \"longitude\": -89.6501,\n    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add School — Missing Fields (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Incomplete School\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["addSchool"]
+            },
+            "description": "Demonstrates validation error when required fields are missing."
+          },
+          "response": [
+            {
+              "name": "400 Validation Error",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    { \"field\": \"address\",   \"message\": \"Address is required\" },\n    { \"field\": \"latitude\",  \"message\": \"Latitude is required\" },\n    { \"field\": \"longitude\", \"message\": \"Longitude is required\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add School — Invalid Coordinates (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bad Coords School\",\n  \"address\": \"1 Test Street\",\n  \"latitude\": 999,\n  \"longitude\": -999\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["addSchool"]
+            },
+            "description": "Demonstrates validation error for out-of-range coordinates."
+          },
+          "response": [
+            {
+              "name": "400 Invalid Coords",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    { \"field\": \"latitude\",  \"message\": \"Latitude must be a number between -90 and 90\" },\n    { \"field\": \"longitude\", \"message\": \"Longitude must be a number between -180 and 180\" }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "List Schools",
+      "item": [
+        {
+          "name": "List Schools — Near New York",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/listSchools?latitude=40.7128&longitude=-74.0060",
+              "host": ["{{baseUrl}}"],
+              "path": ["listSchools"],
+              "query": [
+                { "key": "latitude",  "value": "40.7128", "description": "User latitude (New York)" },
+                { "key": "longitude", "value": "-74.0060", "description": "User longitude (New York)" }
+              ]
+            },
+            "description": "Fetches all schools sorted by proximity to New York City."
+          },
+          "response": [
+            {
+              "name": "200 OK — Sorted List",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Schools retrieved successfully\",\n  \"user_location\": { \"latitude\": 40.7128, \"longitude\": -74.006 },\n  \"total\": 2,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Greenwood High School\",\n      \"address\": \"123 Oak Avenue, New York, NY 10001\",\n      \"latitude\": 40.7128,\n      \"longitude\": -74.006,\n      \"distance_km\": 0\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Springfield High School\",\n      \"address\": \"742 Evergreen Terrace, Springfield, IL 62701\",\n      \"latitude\": 39.7817,\n      \"longitude\": -89.6501,\n      \"distance_km\": 1370.44\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Schools — Near Chicago",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/listSchools?latitude=41.8781&longitude=-87.6298",
+              "host": ["{{baseUrl}}"],
+              "path": ["listSchools"],
+              "query": [
+                { "key": "latitude",  "value": "41.8781", "description": "User latitude (Chicago)" },
+                { "key": "longitude", "value": "-87.6298", "description": "User longitude (Chicago)" }
+              ]
+            },
+            "description": "Fetches all schools sorted by proximity to Chicago."
+          },
+          "response": []
+        },
+        {
+          "name": "List Schools — Missing Params (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/listSchools",
+              "host": ["{{baseUrl}}"],
+              "path": ["listSchools"]
+            },
+            "description": "Demonstrates validation error when query params are missing."
+          },
+          "response": [
+            {
+              "name": "400 Missing Params",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    { \"field\": \"latitude\",  \"message\": \"Latitude query parameter is required\" },\n    { \"field\": \"longitude\", \"message\": \"Longitude query parameter is required\" }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
